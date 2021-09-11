@@ -3,17 +3,16 @@ import os, subprocess
 from pathlib import Path
 from random import *
 
+cwd = str(os.getcwd())
+
 def get_pics(query):
     """Retrieve pictures using query from Unsplash API"""
     url = 'https://api.unsplash.com/photos/random'
-    ps = {'count': 5, 'query': query, 'client_id': 'OjXIqPrz-SZJV4riyq5T_e4wMn4xVw9DF4F9OuyKeJw'}
+    ps = {'count': 5, 'query': query, 'client_id': """!!!REDACTED!!!"""}
     if not ps['query']:
         ps.pop('query')
     response = requests.get(url, params=ps)
     pictures = json.loads(response.text)
-    #f = open('/home/guptamvjm/Desktop/personal/noname.txt', 'w')
-    #f.write(str(pictures))
-    #f.close()
     return pictures
 
 def download_photo(photos, directory):
@@ -60,31 +59,38 @@ def check_crontab(new, old):
                 old.remove(command)
     sep = '\n'
     return sep.join(old) + new
-    
+
+def delete_crontab(fname):
+    """Returns file where autochanger commands are deleted from crontab."""
+    prev_cron = subprocess.run('crontab -l', shell=True, capture_output=True)
+    prev_cron = str(prev_cron.stdout)[1:]
+    cron_list = prev_cron.split('\n')
+    for c in cron_list[:]:
+        if os.path.basename(__file__) in c:
+            cron_list.remove(c)
+    s = ''
+    for c in cron_list:
+        s += c
+    f = open(fname, 'w')
+    f.write(s)
+    f.close()
+    return fname
+
 def run():
     """Parse and use command-line arguments"""
     import argparse
-    parser = argparse.ArgumentParser(description="Desktop Background Changer For UNIX Devices")
-    parser.add_argument('--init', help="Will update crontab, automated for every hour", action='store_true')
+    parser = argparse.ArgumentParser(description="Desktop Background Changer For Linux Ubuntu")
+    parser.add_argument('--stop', help="Will update crontab, automated for every hour", action='store_true')
     parser.add_argument('query', nargs='?', default='', help="Search query (Suggestions: city, nature, minimal)")
     args = parser.parse_args()
-    fname = '/home/guptamvjm/Desktop/temp_cron'
-    if args.init:
+    fname = cwd + '/temp_cron'
+    if args.stop:
+        s = delete_crontab(fname)
+    else:
         s = file_crontab(args.query, fname)
-        subprocess.run('crontab '+ s, shell=True)
-        os.remove(s)
-        #s = crontab_command(args.query)
-        #completed = subprocess.run('crontab '+ s, shell=True, capture_output=True)
-        #prev_crontab = completed.stdout
-    change_background(args.query, '/home/guptamvjm/Desktop')
-
+        change_background(args.query, cwd)
+    subprocess.run('crontab '+ s, shell=True)
+    os.remove(s)
+    
 run()
-
-"""
-crontab -l 2>/dev/null; echo "* * * * * python3 /home/guptamvjm/Desktop/personal/CaesarCipher/cipher.py 0 
-/home/guptamvjm/Desktop/personal/CaesarCipher/caesar.txt" | crontab -
-"""
-#p = read_file("noname.txt")
-#p = eval(p)
-
 

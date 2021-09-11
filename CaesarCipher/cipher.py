@@ -41,7 +41,6 @@ def encrypt_file(filename):
 
 def parse_file(filename):
     """Returns string from file"""
-    #filename = '/home/guptamvjm/Desktop/personal/Caesar.txt'
     f = open(filename, 'r')
     return f.read()
 
